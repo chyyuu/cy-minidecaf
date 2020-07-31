@@ -19,29 +19,6 @@ pub enum Program {
     Func(String, Statement),
 }
 
-// fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Expr {
-//     match tokens.next() {
-//         Some(next) => {
-//             match next {
-//                 Token::Symbol(Symbol::LParen) => { // factor = "(", expression, ")"
-//                     let expr = parse_expression(tokens); // parse expression in parenthesis
-//                     match tokens.next() { // closing parenthesis
-//                         Some(Token::Symbol(Symbol::RParen)) => return expr,
-//                         Some(_) | None => panic!("Missing closing parenthesis on expression"),
-//                     }
-//                 }
-//                 Token::Operator(op) if op.is_unary() => { // factor = unary_op, factor
-//                     let factor = parse_factor(tokens);
-//                     return Expr::UnaryOp(*op, Box::new(factor));
-//                 }
-//                 Token::Integer(num) => return Expr::Const(*num), // factor = int
-//                 _ => panic!("Expected factor"),
-//             }
-//         }
-//         _ => panic!("Missing term"),
-//     }
-// }
-
 fn parse_term(tokens: &mut Peekable<Iter<Token>>) -> Expr { // term = factor, { ("*" | "/"), factor }
     match tokens.next() {
         Some(tok) => {
