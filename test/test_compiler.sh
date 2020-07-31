@@ -39,7 +39,7 @@ for prog in `ls *.c 2>/dev/null`; do
     base="${prog%.*}" #name of executable (filename w/out extension)
     actual_out=`./out`
     actual_exit_code=$?
-    rm out
+    rm out *.s
     test_name="${base##*valid/}"
     printf '%s' "$test_name"
     printf '%*.*s' 0 $((padlength - ${#test_name})) "$padding_dots"
