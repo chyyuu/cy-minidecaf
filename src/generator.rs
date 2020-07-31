@@ -28,7 +28,7 @@ fn generate_statement(statement: &Statement) -> String {
     let mut output = String::new();
     match statement {
         Statement::Return(expr) => {
-            let mut generated_expr = generate_expression(expr);
+            let generated_expr = generate_expression(expr);
             output.push_str(&generated_expr);
             output.push_str("  ret\n");
         }
@@ -40,7 +40,7 @@ pub fn generate(ast: &Program) -> String {
     let mut output = String::new();
     match ast {
         Program::Func(name, statement) => {
-            output.push_str(&format!("  .globl _{0}\n_{0}:\n", name));
+            output.push_str(&format!("  .globl {0}\n{0}:\n", name));
             output.push_str(&generate_statement(statement));
         }
     }
