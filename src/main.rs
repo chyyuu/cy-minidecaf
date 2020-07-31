@@ -1,4 +1,5 @@
 // Made by following along with https://norasandler.com/2017/11/29/Write-a-Compiler.html
+extern crate peek_nth;
 
 use std::env;
 use std::fs::File;
@@ -24,7 +25,7 @@ fn main() {
 
     // Currently this parser is only onto stage 3.
     // I am having trouble with parsing unary operators alone with terms instead of entire expressions.
-    let ast = parse(&tokens);
+    let ast = parse(&tokens[..]);
     println!("Abstract syntax tree:\n{:#?}\n", ast);
 
     // Comment out everything below this line to disable code generation
