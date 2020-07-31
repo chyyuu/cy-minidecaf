@@ -1,4 +1,4 @@
-use scanner::*;
+use crate::scanner::*;
 use std::slice::Iter;
 use std::iter::Peekable;
 

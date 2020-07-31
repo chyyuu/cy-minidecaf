@@ -1,8 +1,8 @@
-use ast::*;
-use scanner::*;
+use crate::ast::*;
+use crate::scanner::*;
 
 fn generate_expression(expression: &Expr) -> String {
-    match expression {
+    match expression {crate::
         Expr::Const(num) => return format!("  movl ${}, %eax\n", num),
         Expr::UnaryOp(op, expr) => {
             let mut generated_expr = generate_expression(expr);
