@@ -19,87 +19,69 @@ pub enum Program {
     Func(String, Statement),
 }
 
-fn parse_term(tokens: &mut Peekable<Iter<Token>>) -> Expr { // term = factor, { ("*" | "/"), factor }
+fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     match tokens.next() {
-        Some(tok) => {
-            match tok {
-                Token::Integer(num) => {
-                    let mut term = Expr::Const(*num);
-                    loop {
-                        match tokens.peek() {
-                            Some(&peek) => {
-                                match peek {
-                                    Token::Operator(peek) => {
-                                        if peek == &Operator::Star || peek == &Operator::Slash { // More terms
-                                            let mut op = Operator::Star; // prevent "uninitialized variable" warning
-                                            match tokens.next() {
-                                                Some(Token::Operator(oper)) => op = *oper,
-                                                _ => assert!(false), // should be impossible
-                                            };
-
-                                            let next_term = parse_term(tokens);
-                                            term = Expr::BinOp(op, Box::new(term), Box::new(next_term));
-                                        } else {
-                                            break; // loop
-                                        }
-                                    }
-                                    _ => break,
-                                }
-                            }
-                            _ => {}
-                        }
+        Some(next) => {
+            match next {
+                Token::Symbol(Symbol::LParen) => { // factor = "(", expression, ")"
+                    let expr = parse_expression(tokens); // parse expression in parenthesis
+                    match tokens.next() { // closing parenthesis
+                        Some(Token::Symbol(Symbol::RParen)) => return expr,
+                        Some(_) | None => panic!("Missing closing parenthesis on expression"),
                     }
-                    return term;
                 }
-                _ => panic!("Expected term"),
+                Token::Operator(op) if op.is_unary() => { // factor = unary_op, factor
+                    let factor = parse_factor(tokens);
+                    return Expr::UnaryOp(*op, Box::new(factor));
+                }
+                Token::Integer(num) => return Expr::Const(*num), // factor = int
+                _ => panic!("Expected factor"),
             }
         }
-        None => panic!("Expected term"),
+        _ => panic!("Missing term"),
     }
 }
 
-fn parse_expression(tokens: &mut Peekable<Iter<Token>>) -> Expr {
-    match tokens.peek() {
-        Some(&peek) => {
-            match peek {
-                Token::Integer(_) => { // Number expressions like 1+1 or 2+3*2 being 2+(3*2) using associativity
-                    let mut term: Expr = parse_term(tokens);
-                    loop {
-                        match tokens.peek() {
-                            Some(&peek) => {
-                                match peek {
-                                    Token::Operator(peek) => {
-                                        if peek == &Operator::Plus || peek == &Operator::Minus { // More terms
-                                            let mut op = Operator::Plus; // prevent "uninitialized variable" warning
-                                            match tokens.next() {
-                                                Some(Token::Operator(oper)) => op = *oper,
-                                                _ => assert!(false), // should be impossible
-                                            };
+fn parse_term(tokens: &mut Peekable<Iter<Token>>) -> Expr { // term = factor, { ("*" | "/"), factor }
+    let mut term = parse_factor(tokens);
+    loop {
+        match tokens.peek() {
+            Some(Token::Operator(peek)) if peek == &Operator::Star || peek == &Operator::Slash => {
+                // More terms
+                let mut op = Operator::Star; // prevent "uninitialized variable" warning
+                match tokens.next() {
+                    Some(Token::Operator(oper)) => op = *oper,
+                    _ => assert!(false), // should be impossible
+                };
 
-                                            let next_term = parse_term(tokens);
-                                            term = Expr::BinOp(op, Box::new(term), Box::new(next_term));
-                                        } else {
-                                            break; // loop
-                                        }
-                                    }
-                                    _ => break,
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    return term;
-                }
-                Token::Operator(op) if op.is_unary() => {
-                    tokens.next();
-                    let expr = parse_expression(tokens);
-                    return Expr::UnaryOp(*op, Box::new(expr));
-                }
-                _ => panic!("Expected expression"),
+                let next_term = parse_factor(tokens);
+                term = Expr::BinOp(op, Box::new(term), Box::new(next_term));
             }
+            _ => break, // no more tokens
         }
-        None => panic!("Expected expression"),
     }
+    return term;
+}
+
+fn parse_expression(tokens: &mut Peekable<Iter<Token>>) -> Expr { // expression = term, { ("+" | "-"), term }
+    // Number expressions like 1+1 or 2+3*2 being 2+(3*2) using associativity
+    let mut term = parse_term(tokens);
+    loop {
+        match tokens.peek() {
+            Some(Token::Operator(peek)) if peek == &Operator::Plus || peek == &Operator::Minus => {
+                let mut op = Operator::Plus; // prevent "uninitialized variable" warning
+                match tokens.next() {
+                    Some(Token::Operator(oper)) => op = *oper,
+                    _ => assert!(false), // should be impossible
+                };
+
+                let next_term = parse_term(tokens);
+                term = Expr::BinOp(op, Box::new(term), Box::new(next_term));
+            }
+            _ => break, // no more tokens
+        }
+    }
+    return term;
 }
 
 fn parse_statement(tokens: &mut Peekable<Iter<Token>>) -> Statement {
