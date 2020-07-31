@@ -65,4 +65,5 @@ for prog in `ls *.c 2>/dev/null`; do
             
 done
 
+rm out a.out *.s 2>/dev/null
 printf "%d successes, %d failures\n" $success $fail
